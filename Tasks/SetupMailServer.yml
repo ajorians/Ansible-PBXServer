@@ -1,0 +1,73 @@
+# Run with:
+# ansible-playbook SetupMailServer.yml
+
+---
+- name: Setup Mail Server
+  hosts: all
+  tasks:
+
+  - name: Add AJ alias
+    lineinfile:
+      state: present
+      dest: /etc/aliases
+      regexp: '^aj: ajorians'
+      line: 'aj: ajorians'
+
+  - name: Add Andrew alias
+    lineinfile:
+      state: present
+      dest: /etc/aliases
+      regexp: '^andrew: ajorians'
+      line: 'andrew: ajorians'
+
+  - name: Add A.J. alias
+    lineinfile:
+      state: present
+      dest: /etc/aliases
+      regexp: '^a.j: ajorians'
+      line: 'a.j.: ajorians'
+
+  - name: Set SMTPD Use TLS
+    lineinfile:
+      state: present
+      dest: /etc/postfix/main.cf
+      regexp: '^smtpd_use_tls = no'
+      line: 'smtpd_use_tls = yes'
+
+  - name: Set SMTPD TLS Cert file
+    lineinfile:
+      state: present
+      dest: /etc/postfix/main.cf
+      regexp: '^smtpd_tls_cert_file ='
+      line: 'smtpd_tls_cert_file = /etc/letsencrypt/live/mail.orians.org/cert.pem'
+
+  - name: Set SMTPD TLS Key file
+    lineinfile:
+      state: present
+      dest: /etc/postfix/main.cf
+      regexp: '^smtpd_tls_key_file ='
+      line: 'smtpd_tls_key_file = /etc/letsencrypt/live/mail.orians.org/privkey.pem'
+
+  - name: Set SMTP TLS Security level
+    lineinfile:
+      state: present
+      dest: /etc/postfix/main.cf
+      line: 'smtp_tls_security_level = may'
+
+  - name: Set tlsmgr
+    lineinfile:
+      state: present
+      dest: /etc/postfix/master.cf
+      line: 'tlsmgr    unix  -       -       n       1000?   1       tlsmgr'
+
+  - name: Set postlog
+    lineinfile:
+      state: present
+      dest: /etc/postfix/master.cf
+      line: 'postlog   unix-dgram n  -       n       -       1       postlogd'
+
+  - name: Start Postfix service
+    ansible.builtin.systemd:
+      state: restarted
+      name: postfix
+

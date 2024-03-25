@@ -1,0 +1,62 @@
+# Run with:
+# ansible-playbook InstallCronJobs.yml
+
+---
+- name: Install Cron jobs
+  hosts: all
+  tasks:
+
+  - name: check if Backup Scripts exists
+    stat:
+      path: /home/ajorians/Documents/git/BackupScripts
+    register: backupscripts_exists
+
+  - name: Checkout from github
+    ansible.builtin.git:
+      repo: https://github.com/ajorians/BackupScripts
+      dest: /home/ajorians/Documents/git/BackupScripts
+    when: backupscripts_exists.stat.exists == false
+
+  - name: Backup MediaWiki files and database
+    ansible.builtin.cron:
+      name: "MediaWiki"
+      minute: "5"
+      hour: "3"
+      job: "/home/ajorians/Documents/git/BackupScripts/MediaWiki/BackupMediaWiki.sh"
+
+  - name: Backup Birthdays files and database
+    ansible.builtin.cron:
+      name: "Birthdays"
+      minute: "10"
+      hour: "3"
+      job: "/home/ajorians/Documents/git/BackupScripts/Birthdays/BackupBirthdays.sh"
+
+  - name: Backup Backdrop files and database
+    ansible.builtin.cron:
+      name: "Backdrop"
+      minute: "15"
+      hour: "3"
+      job: "/home/ajorians/Documents/git/BackupScripts/Backdrop/BackupBackdrop.sh"
+
+  - name: Backup Snappymail files
+    ansible.builtin.cron:
+      name: "Snappymail"
+      minute: "20"
+      hour: "3"
+      job: "/home/ajorians/Documents/git/BackupScripts/Snappymail/BackupSnappymail.sh"
+
+  - name: Backup Nextcloud files
+    ansible.builtin.cron:
+      name: "NextCloud"
+      minute: "25"
+      hour: "3"
+      job: "/home/ajorians/Documents/git/BackupScripts/NextCloud/BackupNextCloud.sh"
+
+  - name: Backup MailServer files
+    ansible.builtin.cron:
+      name: "MailServer"
+      minute: "30"
+      hour: "3"
+      job: "/home/ajorians/Documents/git/BackupScripts/MailServer/BackupMailServer.sh"
+
+
