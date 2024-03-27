@@ -1,0 +1,128 @@
+# Run with:
+# ansible-playbook InstallDahdi.yml
+
+---
+- name: Install Dahdi
+  hosts: all
+  tasks:
+
+  - name: Check if Dahdi download exists
+    stat:
+      path: /root/dahdi-linux
+    register: dahdi_exists
+
+# I had a make just a few modifications.  Debaiting whether to do them here or have a clone of the repo
+  - name: Clone Dahdi Source
+    ansible.builtin.git:
+      repo: https://github.com/asterisk/dahdi-linux
+      dest: /root/dahdi-linux
+      depth: 1
+      version: master
+    when: dahdi_exists.stat.exists == false
+
+# Switch repo due to connectivity issues
+  - name: Change Firmware repo
+    ansible.builtin.shell: sed -i 's|http:\/\/downloads.digium.com\/pub\/telephony\/firmware\/releases|http:\/\/mediaassets.orians.org\/asterisk\/dahdi|' drivers/dahdi/firmware/Makefile
+    args:
+      chdir: /root/dahdi-linux
+
+  - name: Check if Dahdi has been built exists
+    stat:
+      path: /root/dahdi-linux/drivers/dahdi/wctdm.ko
+    register: dahdibuilt_exists
+
+  - name: Make Dahdi
+    ansible.builtin.shell: make
+    args:
+      chdir: /root/dahdi-linux
+    when: dahdibuilt_exists.stat.exists == false
+
+  - name: Check if Dahdi install exists
+    stat:
+      path: /usr/include/dahdi/wctdm_user.h
+    register: dahdiinstalled_exists
+
+  - name: Make Install Dahdi
+    ansible.builtin.shell: make install
+    args:
+      chdir: /root/dahdi-linux
+    when: dahdiinstalled_exists.stat.exists == false
+
+# Dahdi Tools
+  - name: Check if Dahdi Tools download exists
+    stat:
+      path: /root/dahdi-tools
+    register: dahditools_exists
+
+  - name: Clone Dahdi Tools 
+    ansible.builtin.git:
+      repo: https://github.com/asterisk/dahdi-tools
+      dest: /root/dahdi-tools
+      depth: 1
+      version: master
+    when: dahditools_exists.stat.exists == false
+
+  - name: Check if Dahdi Tools has been built exists
+    stat:
+      path: /root/dahdi-tools/dahdi_cfg
+    register: dahditoolsbuilt_exists
+
+  - name: Autoreconf Dahdi Tools
+    ansible.builtin.shell: autoreconf -i
+    args:
+      chdir: /root/dahdi-tools
+    when: dahditoolsbuilt_exists.stat.exists == false
+
+  - name: Configure Dahdi Tools
+    ansible.builtin.shell: ./configure
+    args:
+      chdir: /root/dahdi-tools
+    when: dahditoolsbuilt_exists.stat.exists == false
+
+  - name: Make Dahdi Tools
+    ansible.builtin.shell: make
+    args:
+      chdir: /root/dahdi-tools
+    when: dahditoolsbuilt_exists.stat.exists == false
+
+  - name: Check if Dahdi Tools install exists
+    stat:
+      path: /sbin/dahdi_cfg
+    register: dahditoolsinstalled_exists
+
+  - name: Make Install Dahdi Tools
+    ansible.builtin.shell: make install
+    args:
+      chdir: /root/dahdi-tools
+    when: dahditoolsinstalled_exists.stat.exists == false
+
+  - name: Reload libraries
+    ansible.builtin.shell: ldconfig
+
+  - name: Load Module
+    ansible.builtin.shell: modprobe wcaxx
+
+  - name: Make Dahdi System Configuration file
+    ansible.builtin.copy:
+      dest: /etc/dahdi/system.conf
+      force: false
+      content: |
+         # Span 1: WCTDM/0 "Wildcard A8B" (MASTER) 
+         # channel 1, WCTDM/0/0, no module.
+         fxoks=2
+         echocanceller=mg2,2
+         # channel 3, WCTDM/0/2, no module.
+         # channel 4, WCTDM/0/3, no module.
+         # channel 5, WCTDM/0/4, no module.
+         # channel 6, WCTDM/0/5, no module.
+         # channel 7, WCTDM/0/6, no module.
+         # channel 8, WCTDM/0/7, no module.
+         
+         # Global data
+         
+         loadzone	= us
+         defaultzone	= us
+
+  - name: Load Dahdi device
+    ansible.builtin.shell: dahdi_cfg -vv
+

@@ -39,6 +39,7 @@
 
 - import_playbook: Tasks/InstallPhpMyAdmin.yml 
 
+- import_playbook: Tasks/InstallAutoconf.yml 
 #- import_playbook: Tasks/InstallAsterisk.yml 
 #- import_playbook: Tasks/InstallFreePBX.yml 
 #- import_playbook: Tasks/SetupAsterisk.yml 
