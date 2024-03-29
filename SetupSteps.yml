@@ -22,6 +22,7 @@
 - import_playbook: Tasks/InstallJansson.yml
 - import_playbook: Tasks/InstallXML2.yml
 - import_playbook: Tasks/InstallSQLite3.yml
+- import_playbook: Tasks/InstallSox.yml
 
 - import_playbook: Tasks/InstallScreen.yml
 - import_playbook: Tasks/InstallRTorrent.yml

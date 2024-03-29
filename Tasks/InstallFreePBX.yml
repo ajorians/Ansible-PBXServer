@@ -121,26 +121,27 @@
       state: directory
       mode: '0755'
 
+# These were found running odbcinst -j
   - name: Make ODBC File
-    ansible.builtin.copy:
-      dest: /etc/odbcinst.ini
-      content: |
+    ansible.builtin.blockinfile:
+      path: /etc/unixODBC/odbcinst.ini
+      block: |
         [MySQL]
         Description = ODBC for MySQL (MariaDB)
-        Driver = /usr/lib64/libmaodbc.so
+        Driver = /usr/lib64/mariadb/libmaodbc.so
         FileUsage = 1
 
   - name: Make ODBC INI File
-    ansible.builtin.copy:
-      dest: /etc/odbc.ini
-      content: |
+    ansible.builtin.blockinfile:
+      path: /etc/unixODBC/odbc.ini
+      block: |
         [MySQL-asteriskcdrdb]
         Description=MySQL connection to 'asteriskcdrdb' database
         driver=MySQL
         server=localhost
         database=asteriskcdrdb
         Port=3306
-        Socket=/var/lib/mysql/mysql.sock
+        Socket=/var/run/mysql/mysql.sock
         option=3
         Charset=utf8
 
@@ -259,7 +260,7 @@
       content: |
         <VirtualHost *:80>
           ServerAdmin webmaster@localhost
-          ServerName freepbx.orians.org
+          ServerName pbx.local
           ServerAlias freepbx
           DocumentRoot "/srv/www/htdocs/freepbx"
           <Directory /srv/www/htdocs/freepbx>

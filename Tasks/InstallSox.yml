@@ -1,0 +1,14 @@
+# Run with:
+# ansible-playbook InstallSox.yml
+
+---
+- name: Install Sox
+  hosts: all
+  tasks:
+
+  - name: Install Sox package on OpenSUSE/SUSE Linux
+    zypper:
+      name: sox
+      state: present
+
+
